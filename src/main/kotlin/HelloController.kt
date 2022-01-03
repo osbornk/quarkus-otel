@@ -17,7 +17,7 @@ class HelloController(
         private val log = LoggerFactory.getLogger(HelloController::class.java)
     }
 
-    @Path("sync")
+    @Path("getsync")
     @GET
     @Produces(MediaType.TEXT_PLAIN)
     fun getsync(@QueryParam("name") name: String): String {
@@ -32,22 +32,37 @@ class HelloController(
         }
     }
 
-    @Path("sync")
+    @Path("qpsync")
     @POST
     @Produces(MediaType.TEXT_PLAIN)
-    fun postsync(name: String): String {
-        val span = tracer.spanBuilder("inside postsync").startSpan()
-        log.info("inside postsync - ${span.spanContext.traceId}")
+    fun qpsync(@QueryParam("name") name: String): String {
+        val span = tracer.spanBuilder("inside qpsync").startSpan()
+        log.info("inside qpsync - ${span.spanContext.traceId}")
 
         try {
             val repeat = repeaterClient.sync(name)
-            return "Hello $name $repeat - postsync"
+            return "Hello $name $repeat - qpsync"
         } finally {
             span.end()
         }
     }
 
-    @Path("async")
+    @Path("bodysync")
+    @POST
+    @Produces(MediaType.TEXT_PLAIN)
+    fun postsync(name: String): String {
+        val span = tracer.spanBuilder("inside bodysync").startSpan()
+        log.info("inside bodysync - ${span.spanContext.traceId}")
+
+        try {
+            val repeat = repeaterClient.sync(name)
+            return "Hello $name $repeat - bodysync"
+        } finally {
+            span.end()
+        }
+    }
+
+    @Path("getasync")
     @GET
     @Produces(MediaType.TEXT_PLAIN)
     fun getasync(@QueryParam("name") name: String): Uni<String> {
@@ -62,22 +77,37 @@ class HelloController(
         }
     }
 
-    @Path("async")
+    @Path("qpasync")
     @POST
     @Produces(MediaType.TEXT_PLAIN)
-    fun postasync(name: String): Uni<String> {
-        val span = tracer.spanBuilder("inside postasync").startSpan()
-        log.info("inside postasync - ${span.spanContext.traceId}")
+    fun qpasync(@QueryParam("name") name: String): Uni<String> {
+        val span = tracer.spanBuilder("inside qpasync").startSpan()
+        log.info("inside qpasync - ${span.spanContext.traceId}")
 
         try {
             return repeaterClient.async(name).onItem()
-                .transform { repeat -> "Hello $name $repeat - postasync" } //.await().indefinitely()
+                .transform { repeat -> "Hello $name $repeat - qpasync" } //.await().indefinitely()
         } finally {
             span.end()
         }
     }
 
-    @Path("coroutine")
+    @Path("bodyasync")
+    @POST
+    @Produces(MediaType.TEXT_PLAIN)
+    fun bodyasync(name: String): Uni<String> {
+        val span = tracer.spanBuilder("inside bodyasync").startSpan()
+        log.info("inside bodyasync - ${span.spanContext.traceId}")
+
+        try {
+            return repeaterClient.async(name).onItem()
+                .transform { repeat -> "Hello $name $repeat - bodyasync" } //.await().indefinitely()
+        } finally {
+            span.end()
+        }
+    }
+
+    @Path("getcoroutine")
     @GET
     @Produces(MediaType.TEXT_PLAIN)
     suspend fun getcoroutine(@QueryParam("name") name: String): String {
@@ -93,17 +123,33 @@ class HelloController(
         }
     }
 
-    @Path("coroutine")
+    @Path("qpcoroutine")
     @POST
     @Produces(MediaType.TEXT_PLAIN)
-    suspend fun postcoroutine(name: String): String {
-        val span = tracer.spanBuilder("inside postcoroutine").startSpan()
-        log.info("inside postcoroutine - ${span.spanContext.traceId}")
+    suspend fun qpcoroutine(@QueryParam("name") name: String): String {
+        val span = tracer.spanBuilder("inside qpcoroutine").startSpan()
+        log.info("inside qpcoroutine - ${span.spanContext.traceId}")
 
         try {
             val repeat = repeaterClient.coroutine(name)
 
-            return "Hello $name $repeat - postcoroutine"
+            return "Hello $name $repeat - qpcoroutine"
+        } finally {
+            span.end()
+        }
+    }
+
+    @Path("bodycoroutine")
+    @POST
+    @Produces(MediaType.TEXT_PLAIN)
+    suspend fun bodycoroutine(name: String): String {
+        val span = tracer.spanBuilder("inside bodycoroutine").startSpan()
+        log.info("inside bodycoroutine - ${span.spanContext.traceId}")
+
+        try {
+            val repeat = repeaterClient.coroutine(name)
+
+            return "Hello $name $repeat - bodycoroutine"
         } finally {
             span.end()
         }
